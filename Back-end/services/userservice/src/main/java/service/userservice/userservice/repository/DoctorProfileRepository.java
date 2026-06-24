@@ -3,14 +3,13 @@ package service.userservice.userservice.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import service.userservice.userservice.model.DoctorProfile;
 
 @Repository
-/*public interface DoctorProfileRepository extends JpaRepository<DoctorProfile, String> {
+public interface DoctorProfileRepository extends JpaRepository<DoctorProfile, String> {
     List<DoctorProfile> findByApprovalTrue();
     long countByApprovalTrue();
 
@@ -20,4 +19,4 @@ import service.userservice.userservice.model.DoctorProfile;
     List<DoctorProfile> searchApprovedDoctors(
             @Param("specialization") String specialization,
             @Param("location") String location);
-}*/
+}
