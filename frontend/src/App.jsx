@@ -1,36 +1,48 @@
 // src/App.jsx
-//
-// Two things happen here:
-// 1. Routes are declared — every page is registered here with its
-//    ProtectedRoute wrapper specifying which role(s) can access it.
-// 2. The root div gets a role class (e.g. "role-doctor") derived from
-//    the logged-in user's JWT. This is what makes every button, badge,
-//    and accent line switch color automatically — one class, whole app.
-
-
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+
+// Patient pages
+import PatientDashboard from "./pages/patient/PatientDashboard";
 import DoctorDirectory from "./pages/patient/DoctorDirectory";
+import BookAppointment from "./pages/patient/BookAppointment";
+import Prescriptions from "./pages/patient/Prescriptions";
+import PrescriptionsByDoctor from "./pages/patient/PrescriptionsByDoctor";
+import Chat from "./pages/patient/Chat";
+import Blooddonor from "./pages/patient/Blooddonor";
+
+// Doctor pages
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 import WritePrescription from "./pages/doctor/WritePrescription";
 import PatientHistory from "./pages/doctor/PatientHistory";
 
-// TODO (Person A): import BookAppointment, Prescriptions, Chat, BloodDonor
-// TODO (Person B): import DoctorDashboard, WritePrescription, PatientHistory, ApproveDoctors
-// TODO (Person C): import Medicines, Chat
+// Placeholder dashboards (create these files — see instructions below)
+import PharmacistDashboard from "./pages/pharmacist/PharmacistDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
-// Inner wrapper reads the auth user and applies the role class.
-// It's a separate component so it can call useAuth() (which needs
-// to be inside <AuthProvider>).
 function RoleWrapper({ children }) {
   const { user } = useAuth();
   const roleClass = user ? `role-${user.role}` : "";
   return <div className={roleClass}>{children}</div>;
+}
+
+// Redirect logged-in users to their dashboard from /
+function HomeRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Home />;
+  const ROLE_HOME = {
+    patient: "/patient",
+    doctor: "/doctor",
+    pharmacist: "/pharmacist",
+    admin: "/admin",
+  };
+  return <Navigate to={ROLE_HOME[user.role] || "/"} replace />;
 }
 
 export default function App() {
@@ -39,55 +51,54 @@ export default function App() {
       <BrowserRouter>
         <RoleWrapper>
           <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Home />} />
+            {/* Public */}
+            <Route path="/" element={<HomeRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
 
-            {/* Patient routes */}
-            <Route
-              path="/patient"
-              element={
-                <ProtectedRoute allowedRoles={["patient"]}>
-                  <DoctorDirectory />
-                </ProtectedRoute>
-              }
-            />
+            {/* Patient */}
+            <Route path="/patient" element={
+              <ProtectedRoute allowedRoles={["patient"]}><PatientDashboard /></ProtectedRoute>
+            } />
+            <Route path="/patient/doctors" element={
+              <ProtectedRoute allowedRoles={["patient"]}><DoctorDirectory /></ProtectedRoute>
+            } />
+            <Route path="/patient/book" element={
+              <ProtectedRoute allowedRoles={["patient"]}><BookAppointment /></ProtectedRoute>
+            } />
+            <Route path="/patient/prescriptions" element={
+              <ProtectedRoute allowedRoles={["patient"]}><Prescriptions /></ProtectedRoute>
+            } />
+            <Route path="/patient/prescriptions/:doctorId" element={
+              <ProtectedRoute allowedRoles={["patient"]}><PrescriptionsByDoctor /></ProtectedRoute>
+            } />
+            <Route path="/patient/chat" element={
+              <ProtectedRoute allowedRoles={["patient"]}><Chat /></ProtectedRoute>
+            } />
+            <Route path="/patient/donors" element={
+              <ProtectedRoute allowedRoles={["patient"]}><Blooddonor /></ProtectedRoute>
+            } />
 
-            {/* Doctor routes */}
-            <Route
-              path="/doctor"
-              element={
-                <ProtectedRoute allowedRoles={["doctor"]}>
-                  <DoctorDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/doctor/prescriptions/:prescriptionId"
-              element={
-                <ProtectedRoute allowedRoles={["doctor"]}>
-                  <WritePrescription />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/doctor/patient/:patientId"
-              element={
-                <ProtectedRoute allowedRoles={["doctor"]}>
-                  <PatientHistory />
-                </ProtectedRoute>
-              }
-            />
+            {/* Doctor */}
+            <Route path="/doctor" element={
+              <ProtectedRoute allowedRoles={["doctor"]}><DoctorDashboard /></ProtectedRoute>
+            } />
+            <Route path="/doctor/prescriptions/:prescriptionId" element={
+              <ProtectedRoute allowedRoles={["doctor"]}><WritePrescription /></ProtectedRoute>
+            } />
+            <Route path="/doctor/patient/:patientId" element={
+              <ProtectedRoute allowedRoles={["doctor"]}><PatientHistory /></ProtectedRoute>
+            } />
 
-            {/* TODO: Add routes below following the same pattern:
-                <Route path="/doctor" element={
-                  <ProtectedRoute allowedRoles={["doctor"]}>
-                    <DoctorDashboard />
-                  </ProtectedRoute>
-                } />
-                ... and so on for /pharmacist, /admin
-            */}
+            {/* Pharmacist */}
+            <Route path="/pharmacist" element={
+              <ProtectedRoute allowedRoles={["pharmacist"]}><PharmacistDashboard /></ProtectedRoute>
+            } />
+
+            {/* Admin */}
+            <Route path="/admin" element={
+              <ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>
+            } />
           </Routes>
         </RoleWrapper>
       </BrowserRouter>
