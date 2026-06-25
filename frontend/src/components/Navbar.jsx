@@ -50,7 +50,7 @@ export default function Navbar() {
           <img
             src={logo}
             alt="MediCore"
-            style={{ height: 40, width: "auto", objectFit: "contain" }}
+            style={{ height: 100, width: "auto", objectFit: "contain" }}
           />
         </Link>
 
