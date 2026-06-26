@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 import service.userservice.userservice.model.Appointment;
 @Repository public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
     List<Appointment> findByDoctorId(String doctorId);
+    List<Appointment> findByPatientId(String patientId);
 }

@@ -1,10 +1,19 @@
 package service.userservice.userservice.controller;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import service.userservice.userservice.context.UserContext;
 import service.userservice.userservice.model.Appointment;
@@ -21,6 +30,7 @@ public class PatientController {
     @Autowired private AppointmentRepository apptRepo;
     @Autowired private PrescriptionRepository prescRepo;
     @Autowired private DoctorProfileRepository docRepo;
+    @Autowired private RestTemplate restTemplate;
 
     /**
      * Helper method to validate if the user is actually a patient.
@@ -99,6 +109,23 @@ public class PatientController {
         }
     }
 
+    @GetMapping("/myallappointments")
+    public ResponseEntity<?> getMyAllAppointments() {
+        if (isNotPatient()) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false,
+                "message", "Forbidden: Only patients can access this resource."
+            ));
+        }
+
+        List<Map<String, Object>> appointments = apptRepo.findByPatientId(UserContext.getUserId())
+                .stream()
+                .map(this::mapPatientAppointmentResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(Map.of("success", true, "data", appointments));
+    }
+
     @GetMapping("/prescriptions")
     public ResponseEntity<?> getPrescriptions() {
         if (isNotPatient()) return ResponseEntity.status(403).body(Map.of("success", false, "message", "Forbidden"));
@@ -109,5 +136,55 @@ public class PatientController {
     public ResponseEntity<?> getPrescriptionsByDoctor(@PathVariable String doctorId) {
         if (isNotPatient()) return ResponseEntity.status(403).body(Map.of("success", false, "message", "Forbidden"));
         return ResponseEntity.ok(Map.of("success", true, "data", prescRepo.findByPatientIdAndDoctorId(UserContext.getUserId(), doctorId)));
+    }
+
+    private Map<String, Object> mapPatientAppointmentResponse(Appointment appointment) {
+        DoctorProfile docProfile = docRepo.findById(appointment.getDoctorId()).orElse(new DoctorProfile());
+
+        Map<String, Object> item = new HashMap<>();
+        item.put("appointmentId", String.valueOf(appointment.getSerialNo()));
+        item.put("doctorName", fetchDoctorName(appointment.getDoctorId()));
+        item.put("department", docProfile.getSpecialization() != null ? docProfile.getSpecialization() : "");
+        item.put("date", appointment.getDate());
+        item.put("serialNo", appointment.getSerialNo());
+        item.put("serial_no", appointment.getSerialNo());
+        item.put("status", Boolean.TRUE.equals(appointment.getIsComplete()) ? "COMPLETED" : "CONFIRMED");
+        return item;
+    }
+
+    private String fetchDoctorName(String doctorId) {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes == null) {
+            return "Unknown Doctor";
+        }
+
+        String jwtToken = attributes.getRequest().getHeader("Authorization");
+        if (jwtToken == null) {
+            return "Unknown Doctor";
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", jwtToken);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    "http://localhost:8001/api/v1/auth/user/" + doctorId,
+                    HttpMethod.GET,
+                    requestEntity,
+                    Map.class
+            );
+            Map<?, ?> responseBody = response.getBody();
+            if (responseBody != null && responseBody.containsKey("data")) {
+                Map<?, ?> nestedData = (Map<?, ?>) responseBody.get("data");
+                if (nestedData != null && nestedData.containsKey("name")) {
+                    return (String) nestedData.get("name");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Could not fetch name for doctorId " + doctorId + ": " + e.getMessage());
+        }
+
+        return "Unknown Doctor";
     }
 }
