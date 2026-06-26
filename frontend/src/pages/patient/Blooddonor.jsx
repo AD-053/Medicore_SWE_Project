@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Navbar from "../../components/Navbar";
-import { apiRequest } from "../../api/client";
+import { apiRequest, getErrorMessage } from "../../api/client";
 import { ENDPOINTS } from "../../api/endpoints";
 import { useAuth } from "../../context/AuthContext";
 
@@ -61,14 +61,21 @@ export default function BloodDonor() {
 
     try {
       const res = await apiRequest(ENDPOINTS.donorsByGroup(bloodGroup), { auth: true });
-      if (res.success) setDonors(res.data ?? []);
-      else setSearchError(res.message ?? "Failed to find donors.");
-    } catch {
-      setSearchError("Network error. Please try again.");
+      if (res?.success) setDonors(res.data ?? []);
+      else setSearchError(res?.message ?? "Failed to find donors.");
+    } catch (err) {
+      setSearchError(getErrorMessage(err));
     } finally {
       setSearchLoading(false);
       setSearchedOnce(true);
     }
+  }
+
+  function handleBloodGroupChange(e) {
+    setBloodGroup(e.target.value);
+    setDonors([]);
+    setSearchError("");
+    setSearchedOnce(false);
   }
 
   return (
@@ -91,7 +98,12 @@ export default function BloodDonor() {
           </button>
           <button
             className={`tab-btn ${activeTab === "search" ? "active" : ""}`}
-            onClick={() => setActiveTab("search")}
+            onClick={() => {
+              setActiveTab("search");
+              setSearchError("");
+              setDonors([]);
+              setSearchedOnce(false);
+            }}
           >
             🔍 Find Donors
           </button>
@@ -147,7 +159,7 @@ export default function BloodDonor() {
                   id="blood_group_select"
                   className="form-control"
                   value={bloodGroup}
-                  onChange={(e) => setBloodGroup(e.target.value)}
+                  onChange={handleBloodGroupChange}
                 >
                   <option value="">— Select blood group —</option>
                   {BLOOD_GROUPS.map((bg) => (
@@ -160,7 +172,18 @@ export default function BloodDonor() {
               </button>
             </form>
 
-            {searchError && <div className="alert alert-error">{searchError}</div>}
+            {searchError && (
+              <div className="alert alert-error" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <span>{searchError}</span>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => bloodGroup && handleSearch({ preventDefault: () => {} })}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
 
             {searchedOnce && !searchLoading && !searchError && (
               <>

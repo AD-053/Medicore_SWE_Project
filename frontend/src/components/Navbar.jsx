@@ -15,6 +15,7 @@ const ROLE_LINKS = {
   patient: [
     { to: "/patient",              label: "Dashboard" },
     { to: "/patient/book",         label: "Book" },
+    { to: "/patient/appointments", label: "Appointments" },
     { to: "/patient/prescriptions",label: "Prescriptions" },
     { to: "/patient/chat",         label: "Chat" },
     { to: "/patient/donors",       label: "Blood Donors" },

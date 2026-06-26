@@ -16,6 +16,7 @@ import Prescriptions from "./pages/patient/Prescriptions";
 import PrescriptionsByDoctor from "./pages/patient/PrescriptionsByDoctor";
 import Chat from "./pages/patient/Chat";
 import Blooddonor from "./pages/patient/Blooddonor";
+import MyAppointments from "./pages/patient/MyAppointments";
 
 // Doctor pages
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
@@ -66,6 +67,9 @@ export default function App() {
             } />
             <Route path="/patient/book" element={
               <ProtectedRoute allowedRoles={["patient"]}><BookAppointment /></ProtectedRoute>
+            } />
+            <Route path="/patient/appointments" element={
+              <ProtectedRoute allowedRoles={["patient"]}><MyAppointments /></ProtectedRoute>
             } />
             <Route path="/patient/prescriptions" element={
               <ProtectedRoute allowedRoles={["patient"]}><Prescriptions /></ProtectedRoute>
