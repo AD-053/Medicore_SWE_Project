@@ -29,7 +29,10 @@ const ROLE_LINKS = {
     { to: "/pharmacist/profile", label: "Profile" },
   ],
   admin: [
-    { to: "/admin", label: "Dashboard" },
+    { to: "/admin",          label: "Dashboard" },
+    { to: "/admin/doctors",  label: "Doctors" },
+    { to: "/admin/users",    label: "Users" },
+    { to: "/admin/donors",   label: "Donors" },
   ],
 };
 

@@ -26,6 +26,9 @@ import PatientHistory from "./pages/doctor/PatientHistory";
 // Placeholder dashboards (create these files — see instructions below)
 import PharmacistDashboard from "./pages/pharmacist/PharmacistDashboard.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminDoctors from "./pages/admin/AdminDoctors";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminDonors from "./pages/admin/AdminDonors";
 
 function RoleWrapper({ children }) {
   const { user } = useAuth();
@@ -107,6 +110,15 @@ export default function App() {
             {/* Admin */}
             <Route path="/admin" element={
               <ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>
+            } />
+            <Route path="/admin/doctors" element={
+              <ProtectedRoute allowedRoles={["admin"]}><AdminDoctors /></ProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <ProtectedRoute allowedRoles={["admin"]}><AdminUsers /></ProtectedRoute>
+            } />
+            <Route path="/admin/donors" element={
+              <ProtectedRoute allowedRoles={["admin"]}><AdminDonors /></ProtectedRoute>
             } />
           </Routes>
         </RoleWrapper>
